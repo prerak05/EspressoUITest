@@ -6,10 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.example.coroutinedemo.util.loadImage
 
 import com.example.espresso.R
 import com.example.espresso.data.Movie
+import com.example.espresso.data.source.MoviesDataSource
 import com.example.espresso.data.source.MoviesRemoteDataSource
 import kotlinx.android.synthetic.main.fragment_movie_detail.*
 
@@ -19,7 +21,10 @@ import kotlinx.android.synthetic.main.fragment_movie_detail.*
  * Use the [MovieDetailFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MovieDetailFragment : Fragment() {
+class MovieDetailFragment(
+    val requestOptions: RequestOptions,
+    val moviesDataSource: MoviesDataSource
+) : Fragment() {
 
     private lateinit var movie: Movie
 
@@ -27,7 +32,7 @@ class MovieDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
         arguments?.let { args ->
             args.getInt("movie_id").let { movieId ->
-                MoviesRemoteDataSource.getMovie(movieId).let { movieFromRemote ->
+                moviesDataSource.getMovie(movieId)?.let { movieFromRemote ->
                     movie = movieFromRemote
                 }
             }
@@ -67,10 +72,11 @@ class MovieDetailFragment : Fragment() {
     }
 
     private fun setMovieDetails() {
-        movie.let { nonNullMovie ->
-            movie_image.loadImage(nonNullMovie.image)
-            movie_title.text = nonNullMovie.title
-            movie_description.text = nonNullMovie.description
-        }
+        Glide.with(this@MovieDetailFragment)
+            .applyDefaultRequestOptions(requestOptions)
+            .load(movie.image)
+            .into(movie_image)
+        movie_title.text = movie.title
+        movie_description.text = movie.description
     }
 }
